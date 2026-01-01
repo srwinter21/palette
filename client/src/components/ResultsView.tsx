@@ -1,20 +1,59 @@
 import { type GenerationResult, type BreakdownItem } from "@shared/schema";
-import { motion } from "framer-motion";
-import { Check, ArrowRight, TrendingUp, PiggyBank, PaintBucket, Download, Loader2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Check, ArrowRight, TrendingUp, PiggyBank, PaintBucket, Download, Loader2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useRef, useState } from "react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 
 interface ResultsViewProps {
   result: GenerationResult;
+  originalImage?: string;
+  inspirationImage?: string;
 }
 
 const formatCurrency = (val: number) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(val);
 
-export function ResultsView({ result }: ResultsViewProps) {
+function ExpandableImage({ src, alt, label }: { src: string; alt: string; label: string }) {
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <button className="relative rounded-xl overflow-hidden shadow-md group aspect-[4/3] w-full text-left transition-transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-primary">
+          <img
+            src={src}
+            alt={alt}
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+            <div className="opacity-0 group-hover:opacity-100 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-medium shadow-sm text-primary transition-opacity">
+              Click to Expand
+            </div>
+          </div>
+          <div className="absolute top-3 left-3 px-3 py-1 bg-white/90 backdrop-blur-sm rounded-full text-[10px] font-bold shadow-sm text-primary uppercase tracking-wider">
+            {label}
+          </div>
+        </button>
+      </DialogTrigger>
+      <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 overflow-hidden border-none bg-transparent shadow-none flex items-center justify-center">
+        <div className="relative w-full h-full flex items-center justify-center">
+          <img
+            src={src}
+            alt={alt}
+            className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
+          />
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-md text-white px-4 py-2 rounded-full text-sm font-medium border border-white/10">
+            {label}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export function ResultsView({ result, originalImage, inspirationImage }: ResultsViewProps) {
   const exportRef = useRef<HTMLDivElement>(null);
   const [isExporting, setIsExporting] = useState(false);
 
@@ -113,14 +152,17 @@ export function ResultsView({ result }: ResultsViewProps) {
               <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-black/10 group aspect-[4/3]">
                  {/* Descriptive comment for static image replacement if URL breaks */}
                  {/* unsplash interior design modern living room */}
-                <img
-                  src={result.afterImageUrl}
-                  alt="Transformed Space"
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                />
-                <div className="absolute top-4 left-4 px-4 py-2 bg-white/90 backdrop-blur-sm rounded-full text-sm font-semibold shadow-sm text-primary">
-                  Transformed Design
-                </div>
+                <ExpandableImage src={result.afterImageUrl} alt="Transformed Design" label="Transformed Design" />
+              </div>
+
+              {/* Input context thumbnails */}
+              <div className="grid grid-cols-2 gap-4">
+                {originalImage && (
+                  <ExpandableImage src={originalImage} alt="Original Space" label="Original Space" />
+                )}
+                {inspirationImage && (
+                  <ExpandableImage src={inspirationImage} alt="Inspiration" label="Inspiration" />
+                )}
               </div>
             </div>
 

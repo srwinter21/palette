@@ -189,7 +189,11 @@ export default function Home() {
                   Start Over
                 </button>
              </div>
-             <ResultsView result={result} />
+             <ResultsView 
+               result={result} 
+               originalImage={spacePreview || undefined}
+               inspirationImage={inspoPreview || undefined}
+             />
           </motion.div>
         )}
       </main>
