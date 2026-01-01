@@ -9,9 +9,10 @@ interface UploadCardProps {
   image: string | null;
   onImageChange: (file: File | null) => void;
   className?: string;
+  isThumbnail?: boolean;
 }
 
-export function UploadCard({ title, description, image, onImageChange, className }: UploadCardProps) {
+export function UploadCard({ title, description, image, onImageChange, className, isThumbnail }: UploadCardProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -43,6 +44,23 @@ export function UploadCard({ title, description, image, onImageChange, className
     onImageChange(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
+
+  if (isThumbnail) {
+    return (
+      <div className={cn("relative rounded-xl overflow-hidden border border-border bg-card shadow-sm aspect-video group", className)}>
+        {image ? (
+          <img src={image} alt={title} className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full bg-muted flex items-center justify-center">
+            <Upload className="w-6 h-6 text-muted-foreground" />
+          </div>
+        )}
+        <div className="absolute inset-0 bg-black/40 flex items-end p-3 opacity-0 group-hover:opacity-100 transition-opacity">
+          <p className="text-white text-xs font-medium">{title}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={cn("flex flex-col h-full", className)}>

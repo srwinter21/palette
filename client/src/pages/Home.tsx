@@ -86,90 +86,100 @@ export default function Home() {
           </p>
         </div>
 
-        {/* Input Section */}
-        <AnimatePresence mode="wait">
-          {!result && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20, height: 0 }}
-              className="space-y-12"
-            >
-              {/* Step 1: Uploads */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <UploadCard
-                  title="Your Space"
-                  description="Upload a clear photo of the room you want to redesign."
-                  image={spacePreview}
-                  onImageChange={handleSpaceUpload}
-                  className="h-full"
-                />
-                <UploadCard
-                  title="Inspiration"
-                  description="Upload a photo that captures the style you love."
-                  image={inspoPreview}
-                  onImageChange={handleInspoUpload}
-                  className="h-full"
-                />
-              </div>
+        {/* Input Section - Top row thumbnails visible when result is present */}
+        <div className="space-y-12">
+          {/* Step 1: Uploads (Thumbnails when result exists) */}
+          <div className={cn(
+            "grid gap-8 transition-all duration-500",
+            result ? "grid-cols-2 md:grid-cols-4" : "grid-cols-1 md:grid-cols-2"
+          )}>
+            <UploadCard
+              title="Your Space"
+              description="Upload a photo of the room you want to redesign."
+              image={spacePreview}
+              onImageChange={handleSpaceUpload}
+              className={cn("h-full", result && "opacity-80 scale-95")}
+              isThumbnail={!!result}
+            />
+            <UploadCard
+              title="Inspiration"
+              description="Upload a photo that captures the style you love."
+              image={inspoPreview}
+              onImageChange={handleInspoUpload}
+              className={cn("h-full", result && "opacity-80 scale-95")}
+              isThumbnail={!!result}
+            />
+          </div>
 
-              {/* Step 2: Budget */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
-                    2
+          <AnimatePresence mode="wait">
+            {!result && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20, height: 0 }}
+                className="space-y-12"
+              >
+                {/* Step 2: Budget */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
+                      2
+                    </div>
+                    <h3 className="text-xl font-bold">Select your budget tier</h3>
                   </div>
-                  <h3 className="text-xl font-bold">Select your budget tier</h3>
+                  <BudgetSelector selected={budgetTier} onSelect={setBudgetTier} />
                 </div>
-                <BudgetSelector selected={budgetTier} onSelect={setBudgetTier} />
-              </div>
 
-              {/* Action */}
-              <div className="flex flex-col items-center pt-8">
-                <button
-                  onClick={handleGenerate}
-                  disabled={!canGenerate || isGenerating}
-                  className={cn(
-                    "relative overflow-hidden group px-10 py-5 rounded-2xl font-bold text-lg transition-all duration-300 transform",
-                    !canGenerate || isGenerating
-                      ? "bg-muted text-muted-foreground cursor-not-allowed"
-                      : "bg-primary text-primary-foreground shadow-xl shadow-primary/25 hover:shadow-2xl hover:shadow-primary/30 hover:-translate-y-1 active:translate-y-0"
-                  )}
-                >
-                  <span className="relative z-10 flex items-center gap-3">
-                    {isGenerating ? (
-                      <>
-                        <Loader2 className="animate-spin" />
-                        Generating Design...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="w-5 h-5" />
-                        Generate Design + Estimate
-                        <ChevronRight className="w-5 h-5 opacity-50 group-hover:translate-x-1 transition-transform" />
-                      </>
+                {/* Action */}
+                <div className="flex flex-col items-center pt-8">
+                  <button
+                    onClick={handleGenerate}
+                    disabled={!canGenerate || isGenerating}
+                    className={cn(
+                      "relative overflow-hidden group px-10 py-5 rounded-2xl font-bold text-lg transition-all duration-300 transform",
+                      !canGenerate || isGenerating
+                        ? "bg-muted text-muted-foreground cursor-not-allowed"
+                        : "bg-primary text-primary-foreground shadow-xl shadow-primary/25 hover:shadow-2xl hover:shadow-primary/30 hover:-translate-y-1 active:translate-y-0"
                     )}
-                  </span>
+                  >
+                    <span className="relative z-10 flex items-center gap-3">
+                      {isGenerating ? (
+                        <>
+                          <Loader2 className="animate-spin" />
+                          Generating Design...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-5 h-5" />
+                          Generate Design + Estimate
+                          <ChevronRight className="w-5 h-5 opacity-50 group-hover:translate-x-1 transition-transform" />
+                        </>
+                      )}
+                    </span>
+                    
+                    {!isGenerating && canGenerate && (
+                      <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    )}
+                  </button>
                   
-                  {/* Hover effect background */}
-                  {!isGenerating && canGenerate && (
-                    <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  {!canGenerate && (
+                    <p className="mt-4 text-sm text-muted-foreground animate-pulse">
+                      Please upload both images to continue
+                    </p>
                   )}
-                </button>
-                
-                {!canGenerate && (
-                  <p className="mt-4 text-sm text-muted-foreground animate-pulse">
-                    Please upload both images to continue
-                  </p>
-                )}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
         {/* Results Section */}
         {result && (
-          <div className="mt-8">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-8"
+          >
              <div className="flex justify-between items-center mb-10">
                 <h2 className="text-3xl font-bold font-display text-primary">Your Design Plan</h2>
                 <button 
@@ -180,7 +190,7 @@ export default function Home() {
                 </button>
              </div>
              <ResultsView result={result} />
-          </div>
+          </motion.div>
         )}
       </main>
     </div>
