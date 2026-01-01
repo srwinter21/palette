@@ -1,5 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
-import { api, type GenerationResult } from "@shared/routes";
+import { api } from "@shared/routes";
+import { type GenerationResult } from "@shared/schema";
 import { z } from "zod";
 
 type GenerateInput = z.infer<typeof api.generate.create.input>;
