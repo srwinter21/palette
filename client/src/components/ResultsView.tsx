@@ -23,49 +23,39 @@ export function ResultsView({ result }: ResultsViewProps) {
     
     setIsExporting(true);
     try {
-      const element = exportRef.current;
-      
-      // Calculate full scroll dimensions
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: "#ffffff",
-        windowWidth: element.scrollWidth,
-        windowHeight: element.scrollHeight,
-        onclone: (clonedDoc) => {
-          const clonedElement = clonedDoc.getElementById('export-container');
-          if (clonedElement) {
-            clonedElement.style.height = 'auto';
-            clonedElement.style.overflow = 'visible';
-          }
-        }
-      });
-      
-      const imgData = canvas.toDataURL("image/png");
       const pdf = new jsPDF({
         orientation: "portrait",
         unit: "mm",
         format: "a4"
       });
-      
-      const imgProps = pdf.getImageProperties(imgData);
       const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-      
-      // Handle multi-page PDF if content is too long
       const pageHeight = pdf.internal.pageSize.getHeight();
-      let heightLeft = pdfHeight;
-      let position = 0;
+      const margin = 10;
+      const contentWidth = pdfWidth - (margin * 2);
+      
+      const elementsToExport = exportRef.current.querySelectorAll('.pdf-section');
+      
+      for (let i = 0; i < elementsToExport.length; i++) {
+        const element = elementsToExport[i] as HTMLElement;
+        const canvas = await html2canvas(element, {
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          backgroundColor: "#ffffff"
+        });
+        
+        const imgData = canvas.toDataURL("image/png");
+        const imgProps = pdf.getImageProperties(imgData);
+        const imgHeight = (imgProps.height * contentWidth) / imgProps.width;
+        
+        if (i > 0) pdf.addPage();
+        
+        // If an element is still too tall for one page, we just scale it to fit
+        const finalHeight = imgHeight > (pageHeight - margin * 2) ? (pageHeight - margin * 2) : imgHeight;
+        const finalWidth = imgHeight > (pageHeight - margin * 2) ? (imgProps.width * finalHeight) / imgProps.height : contentWidth;
+        const xOffset = margin + (contentWidth - finalWidth) / 2;
 
-      pdf.addImage(imgData, "PNG", 0, position, pdfWidth, pdfHeight);
-      heightLeft -= pageHeight;
-
-      while (heightLeft >= 0) {
-        position = heightLeft - pdfHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, "PNG", 0, position, pdfWidth, pdfHeight);
-        heightLeft -= pageHeight;
+        pdf.addImage(imgData, "PNG", xOffset, margin, finalWidth, finalHeight);
       }
       
       pdf.save(`Palette-Design-Plan-${Date.now()}.pdf`);
@@ -118,7 +108,7 @@ export function ResultsView({ result }: ResultsViewProps) {
           className="space-y-12 pb-20"
         >
           {/* Hero Section: Before/After */}
-          <motion.div variants={item} className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+          <motion.div variants={item} className="pdf-section grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
             <div className="space-y-6">
               <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-black/10 group aspect-[4/3]">
                  {/* Descriptive comment for static image replacement if URL breaks */}
@@ -167,7 +157,7 @@ export function ResultsView({ result }: ResultsViewProps) {
           </motion.div>
 
           {/* Cost Breakdown Table */}
-          <motion.div variants={item} className="space-y-6">
+          <motion.div variants={item} className="pdf-section space-y-6">
             <div className="flex items-center justify-between">
               <h3 className="text-2xl font-bold">Detailed Cost Breakdown</h3>
               <div className="text-sm text-muted-foreground hidden sm:block">
@@ -216,7 +206,7 @@ export function ResultsView({ result }: ResultsViewProps) {
           </motion.div>
 
           {/* Tips Section */}
-          <motion.div variants={item} className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <motion.div variants={item} className="pdf-section grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="bg-gradient-to-br from-indigo-50 to-white rounded-2xl p-8 border border-indigo-100 shadow-sm">
               <h3 className="text-xl font-bold text-indigo-900 mb-6 flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-indigo-500" />
