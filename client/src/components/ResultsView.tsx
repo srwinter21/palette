@@ -24,11 +24,22 @@ export function ResultsView({ result }: ResultsViewProps) {
     setIsExporting(true);
     try {
       const element = exportRef.current;
+      
+      // Calculate full scroll dimensions
       const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,
         logging: false,
-        backgroundColor: "#ffffff"
+        backgroundColor: "#ffffff",
+        windowWidth: element.scrollWidth,
+        windowHeight: element.scrollHeight,
+        onclone: (clonedDoc) => {
+          const clonedElement = clonedDoc.getElementById('export-container');
+          if (clonedElement) {
+            clonedElement.style.height = 'auto';
+            clonedElement.style.overflow = 'visible';
+          }
+        }
       });
       
       const imgData = canvas.toDataURL("image/png");
@@ -42,7 +53,21 @@ export function ResultsView({ result }: ResultsViewProps) {
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
       
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      // Handle multi-page PDF if content is too long
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      let heightLeft = pdfHeight;
+      let position = 0;
+
+      pdf.addImage(imgData, "PNG", 0, position, pdfWidth, pdfHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft >= 0) {
+        position = heightLeft - pdfHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, "PNG", 0, position, pdfWidth, pdfHeight);
+        heightLeft -= pageHeight;
+      }
+      
       pdf.save(`Palette-Design-Plan-${Date.now()}.pdf`);
     } catch (error) {
       console.error("PDF Export failed:", error);
@@ -85,7 +110,7 @@ export function ResultsView({ result }: ResultsViewProps) {
         </Button>
       </div>
       
-      <div ref={exportRef} className="p-4 bg-white rounded-2xl">
+      <div ref={exportRef} id="export-container" className="p-4 bg-white rounded-2xl">
         <motion.div
           variants={container}
           initial="hidden"
